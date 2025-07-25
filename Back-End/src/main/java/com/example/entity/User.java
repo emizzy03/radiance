@@ -1,12 +1,14 @@
 package com.example.entity;
+import java.util.Collection;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
-
 @Entity
 @Table(name = "users")
 public class User {
@@ -23,6 +25,20 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+
+    @ManyToMany
+    @JoinTable(name = "user_roles",
+            joinColumns = @jakarta.persistence.JoinColumn(name = "user_id"),
+            inverseJoinColumns = @jakarta.persistence.JoinColumn(name = "role_id"))
+    private Collection<Role> roles;
+
+    // Getters and Setters for roles
+    public Collection<Role> getRoles() {
+        return roles;
+    }
+    public void setRoles(Collection<Role> roles) {
+        this.roles = roles;
+    }
 
     // Default constructor
     public User() {
