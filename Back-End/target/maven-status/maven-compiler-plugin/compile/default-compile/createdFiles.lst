@@ -1,0 +1,13 @@
+com\example\entity\User.class
+com\example\controller\ProductController.class
+com\example\service\ProductService.class
+com\example\entity\Role.class
+com\example\repository\ProductRepository.class
+com\example\config\SecurityConfig.class
+com\example\repository\RoleRepository.class
+com\example\controller\UserController.class
+com\example\MyShoppingApplication.class
+com\example\repository\UserRepository.class
+com\example\entity\Product.class
+com\example\service\UserService.class
+com\example\entity\ErrorResponse.class

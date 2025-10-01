@@ -20,7 +20,7 @@ public class MyShoppingApplication {
      * Runs the application
      *
      * @param args The arguments of the program.
-     * @throws InterruptedException
+
      */
     public static void main(String[] args) throws InterruptedException {
         SpringApplication.run(MyShoppingApplication.class, args);

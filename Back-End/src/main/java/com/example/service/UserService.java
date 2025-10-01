@@ -40,6 +40,28 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
+    public User createAdminUser(String username, String email, String password) {
+        // Check if username or email already exists
+        if (existsByUsername(username)) {
+            throw new IllegalArgumentException("Username already exists");
+        }
+        if (existsByEmail(email)) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+        // Create new user with admin role
+        User adminUser = new User(username, email, passwordEncoder.encode(password));
+        Role adminRole = roleRepository.findByName("ROLE_ADMIN");
+        if (adminRole == null) {
+            // Option 1: Throw an exception
+            throw new IllegalStateException("Admin role does not exist. Please create the ROLE_ADMIN in the database.");
+            // Option 2: Uncomment below to create the role automatically
+            // adminRole = new Role();
+            // adminRole.setName("ROLE_ADMIN");
+            // adminRole = roleRepository.save(adminRole);
+        }
+        adminUser.setRoles(java.util.Collections.singleton(adminRole));
+        return userRepository.save(adminUser);
+    }
     
     public User updatePassword(Long id, String currentPassword, String newPassword) {
         User user = userRepository.findById(id).orElse(null);

@@ -24,7 +24,20 @@ public class ProductService {
     }
 
     public Product createProduct(Product product) {
+        validateProduct(product);
         return productRepository.save(product);
+    }
+
+    private void validateProduct(Product product) {
+        if (product.getName() == null || product.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Product name cannot be empty");
+        }
+        if (product.getPrice() == null || product.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Product price must be greater than zero");
+        }
+        if (product.getQuantity() == null || product.getQuantity() < 0) {
+            throw new IllegalArgumentException("Product quantity cannot be negative");
+        }
     }
 
     public Product updateProduct(Long id, Product productDetails) {
