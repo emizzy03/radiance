@@ -116,4 +116,42 @@ public class UserController {
         }
         return ResponseEntity.notFound().build();
     }
+
+    // Additional endpoints for role management
+    @PostMapping("/{id}/roles/{roleName}")
+    public ResponseEntity<Void> assignRoleToUser(@PathVariable Long id, @PathVariable String roleName) {
+        try {
+            userService.assignRoleToUser(id, roleName);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    @DeleteMapping("/{id}/roles/{roleName}")
+    public ResponseEntity<Void> removeRoleFromUser(@PathVariable Long id, @PathVariable String roleName) {
+        try {
+            userService.removeRoleFromUser(id, roleName);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    @PostMapping
+    public ResponseEntity<Void> createAdminUser(@PathVariable String username, @RequestBody Map<String, String> emailMap, @RequestBody Map<String, String> passwordMap) {
+        try {
+            String email = emailMap.get("email");
+            String password = passwordMap.get("password");
+            userService.createAdminUser(username, email, password);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
 }
