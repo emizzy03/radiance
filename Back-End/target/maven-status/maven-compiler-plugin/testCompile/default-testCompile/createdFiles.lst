@@ -1,0 +1,11 @@
+com\example\entity\ProductTest.class
+com\example\entity\RoleTest.class
+com\example\repository\RoleRepositoryTest.class
+com\example\controller\ProductControllerTest.class
+com\example\service\UserServiceTest.class
+com\example\config\TestSecurityConfig.class
+com\example\entity\UserTest.class
+com\example\repository\ProductRepositoryTest.class
+com\example\service\ProductServiceTest.class
+com\example\repository\UserRepositoryTest.class
+com\example\controller\UserControllerTest.class
