@@ -87,4 +87,9 @@ public class AuthController {
                     .body("An error occurred during registration");
         }
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        return ResponseEntity.noContent().build();
+    }
 }
