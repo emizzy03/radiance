@@ -137,8 +137,12 @@ public class UserService {
         }
         User user = userRepository.findById(id).orElse(null);
         if (user != null) {
-            user.setUsername(userDetails.getUsername());
-            user.setEmail(userDetails.getEmail());
+            if (userDetails.getUsername() != null) {
+                user.setUsername(userDetails.getUsername());
+            }
+            if (userDetails.getEmail() != null) {
+                user.setEmail(userDetails.getEmail());
+            }
             return userRepository.save(user);
         }
         return null;

@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,7 +45,12 @@ public class FileUploadController {
                 return ResponseEntity.badRequest().body("Invalid file name");
             }
 
-            String extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+            int lastDotIndex = originalFilename.lastIndexOf(".");
+            if (lastDotIndex < 0) {
+                return ResponseEntity.badRequest().body("Invalid file type. Allowed types: jpg, jpeg, png, gif, webp");
+            }
+
+            String extension = originalFilename.substring(lastDotIndex).toLowerCase();
             boolean isValidExtension = false;
             for (String allowedExt : ALLOWED_EXTENSIONS) {
                 if (extension.equals(allowedExt)) {
@@ -89,6 +93,9 @@ public class FileUploadController {
     @DeleteMapping("/image/{filename}")
     public ResponseEntity<?> deleteImage(@PathVariable String filename) {
         try {
+            if (!isSafeFilename(filename)) {
+                return ResponseEntity.badRequest().body("Invalid file name");
+            }
             Path filePath = Paths.get(uploadDir).resolve(filename);
             
             if (Files.exists(filePath)) {
@@ -101,5 +108,13 @@ public class FileUploadController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to delete file: " + e.getMessage());
         }
+    }
+
+    private boolean isSafeFilename(String filename) {
+        if (filename == null || filename.isBlank()) {
+            return false;
+        }
+        Path normalized = Paths.get(filename).normalize();
+        return normalized.getFileName() != null && normalized.equals(normalized.getFileName());
     }
 }
