@@ -1,0 +1,38 @@
+# JWT Configuration
+jwt:
+  secret: mySecretKeyForJWTTokenGenerationThatIsAtLeast256BitsLongForHS256Algorithm
+  expiration: 86400000  # 24 hours in milliseconds
+
+# CORS Configuration
+app:
+  cors:
+    allowed-origins: http://localhost:3000
+
+# Spring Configuration
+spring:
+  application:
+    name: radiance
+  
+  # Database Configuration (H2 for development)
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  # JPA Configuration
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  
+  # H2 Console (for development)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+# Server Configuration
+server:
+  port: 8080

@@ -140,18 +140,4 @@ public class UserController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    @PostMapping
-    public ResponseEntity<Void> createAdminUser(@PathVariable String username, @RequestBody Map<String, String> emailMap, @RequestBody Map<String, String> passwordMap) {
-        try {
-            String email = emailMap.get("email");
-            String password = passwordMap.get("password");
-            userService.createAdminUser(username, email, password);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
 }

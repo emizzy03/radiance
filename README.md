@@ -19,6 +19,12 @@ A full-stack e-commerce platform with admin dashboard, cart, orders, and product
 - `cd backend && mvn spring-boot:run`
 - `cd frontend && npm start`
 
+📖 **For detailed setup instructions, see the [docs](docs/) folder:**
+- [Quick Admin Setup](docs/QUICK_ADMIN_SETUP.md)
+- [Database Setup](docs/DATABASE_SETUP.md)
+- [H2 Testing Guide](docs/H2_TESTING_GUIDE.md)
+- [Full Documentation Index](docs/README.md)
+
 ## 🗃️ DB Models
 - User, Product, CartItem, Order, OrderItem
 
