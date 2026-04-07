@@ -25,6 +25,11 @@ import com.example.entity.User;
 import com.example.service.UserService;
 import com.example.entity.ErrorResponse;
 
+/**
+ * REST controller for managing User operations.
+ * Provides endpoints for creating, retrieving, updating, and deleting users,
+ * as well as managing user roles.
+ */
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "http://localhost:3000")
@@ -140,11 +145,18 @@ public class UserController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    @PostMapping
-    public ResponseEntity<Void> createAdminUser(@PathVariable String username, @RequestBody Map<String, String> emailMap, @RequestBody Map<String, String> passwordMap) {
+    /**
+     * Creates an admin user.
+     *
+     * @param username the username for the new admin
+     * @param payload a map containing email and password
+     * @return ResponseEntity indicating success or failure
+     */
+    @PostMapping("/admin/{username}")
+    public ResponseEntity<Void> createAdminUser(@PathVariable String username, @RequestBody Map<String, String> payload) {
         try {
-            String email = emailMap.get("email");
-            String password = passwordMap.get("password");
+            String email = payload.get("email");
+            String password = payload.get("password");
             userService.createAdminUser(username, email, password);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {

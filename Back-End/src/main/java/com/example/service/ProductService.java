@@ -9,6 +9,10 @@ import org.springframework.stereotype.Service;
 import com.example.entity.Product;
 import com.example.repository.ProductRepository;
 
+/**
+ * Service operations for Products.
+ * Handles business logic, validation, and data persistence for Products.
+ */
 @Service
 public class ProductService {
 

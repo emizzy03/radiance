@@ -18,6 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.entity.Product;
 import com.example.service.ProductService;
 
+/**
+ * REST controller for managing Product operations.
+ * Provides endpoints to list, retrieve, create, update, and delete products.
+ */
 @RestController
 @RequestMapping("/api/products")
 @CrossOrigin(origins = "http://localhost:3000")

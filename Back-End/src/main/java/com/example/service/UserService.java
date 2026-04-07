@@ -10,6 +10,10 @@ import com.example.entity.Role;
 import com.example.entity.User;
 import com.example.repository.RoleRepository;
 import com.example.repository.UserRepository;
+/**
+ * Service operations for Users.
+ * Handles user business logic, security validations, and data persistence.
+ */
 @Service
 public class UserService {
     @Autowired
