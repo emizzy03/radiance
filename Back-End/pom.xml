@@ -78,6 +78,12 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <mainClass>com.example.MyShoppingApplication</mainClass>
+                    <!-- `mvn spring-boot:run` is a local developer launch, so it opts
+                         into the dev profile. Packaged `java -jar` deployments stay
+                         profile-less and therefore never get the seeded dev admin. -->
+                    <profiles>
+                        <profile>dev</profile>
+                    </profiles>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

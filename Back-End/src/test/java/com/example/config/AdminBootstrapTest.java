@@ -75,9 +75,64 @@ class AdminBootstrapTest {
     }
 
     @Test
-    void defaultProfile_withoutAdminPassword_usesDevDefault() throws Exception {
+    void testProfile_withoutAdminPassword_usesDevDefault() throws Exception {
         MockEnvironment env = new MockEnvironment();
-        // no active profiles == plain local run == dev
+        env.setActiveProfiles("test");
+        setEnvironment(env);
+
+        when(userService.existsByUsername("admin")).thenReturn(false);
+
+        adminBootstrap.run();
+
+        verify(userService).createAdminUser(eq("admin"), anyString(), eq("admin12345"));
+    }
+
+    @Test
+    void noActiveProfile_withoutAdminPassword_skipsSeeding() throws Exception {
+        // An empty active-profile set is Spring Boot's default for a plain
+        // `java -jar` or container start, so it must not unlock the dev default.
+        MockEnvironment env = new MockEnvironment();
+        setEnvironment(env);
+
+        when(userService.existsByUsername("admin")).thenReturn(false);
+
+        adminBootstrap.run();
+
+        verify(userService, never()).createAdminUser(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void noActiveProfile_withAdminPassword_seedsWithProvidedPassword() throws Exception {
+        MockEnvironment env = new MockEnvironment();
+        env.setProperty("ADMIN_PASSWORD", "super-secret-strong-password");
+        setEnvironment(env);
+
+        when(userService.existsByUsername("admin")).thenReturn(false);
+
+        adminBootstrap.run();
+
+        verify(userService).createAdminUser(eq("admin"), anyString(), eq("super-secret-strong-password"));
+    }
+
+    @Test
+    void nonDevDefaultProfile_withoutAdminPassword_skipsSeeding() throws Exception {
+        // spring.profiles.default=prod leaves the active set empty, so the
+        // default set is what must be inspected.
+        MockEnvironment env = new MockEnvironment();
+        env.setDefaultProfiles("prod");
+        setEnvironment(env);
+
+        when(userService.existsByUsername("admin")).thenReturn(false);
+
+        adminBootstrap.run();
+
+        verify(userService, never()).createAdminUser(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void devDefaultProfile_withoutAdminPassword_usesDevDefault() throws Exception {
+        MockEnvironment env = new MockEnvironment();
+        env.setDefaultProfiles("dev");
         setEnvironment(env);
 
         when(userService.existsByUsername("admin")).thenReturn(false);

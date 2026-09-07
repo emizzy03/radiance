@@ -12,7 +12,9 @@ import com.example.service.UserService;
 /**
  * Seeds an initial ROLE_ADMIN user on startup when no admin exists yet, so the
  * admin page can be used out of the box. Credentials are read from environment
- * variables with safe development defaults; override them in real deployments.
+ * variables; the well-known development password is only used when the
+ * {@code dev} or {@code test} profile is explicitly in effect. Any other
+ * deployment must supply {@code ADMIN_PASSWORD} or no admin is seeded.
  */
 @Component
 public class AdminBootstrap implements CommandLineRunner {
@@ -44,8 +46,9 @@ public class AdminBootstrap implements CommandLineRunner {
         // is missing we skip seeding rather than create a well-known account.
         if (password == null || password.isBlank()) {
             if (!isDevProfile()) {
-                log.warn("Admin bootstrap: ADMIN_PASSWORD is not set and no dev profile is active; "
-                        + "skipping admin seed. Set ADMIN_PASSWORD to bootstrap an admin in this environment.");
+                log.warn("Admin bootstrap: ADMIN_PASSWORD is not set and neither the 'dev' nor the 'test' "
+                        + "profile is active; skipping admin seed. Set ADMIN_PASSWORD to bootstrap an admin "
+                        + "in this environment.");
                 return;
             }
             password = DEV_DEFAULT_PASSWORD;
@@ -62,16 +65,22 @@ public class AdminBootstrap implements CommandLineRunner {
     }
 
     /**
-     * Dev mode is when the {@code dev} or {@code test} profile is active, or when
-     * no profile is active at all (a plain local run). Any explicit non-dev
-     * profile (e.g. {@code prod}) is treated as a real deployment.
+     * Dev mode requires the {@code dev} or {@code test} profile to be explicitly
+     * in effect. Everything else, including the empty profile set Spring Boot
+     * uses for a plain {@code java -jar} or container start, is treated as a real
+     * deployment: that state is indistinguishable from a production launch that
+     * simply forgot to set {@code spring.profiles.active}.
+     *
+     * <p>When no profile is active, Spring applies {@code spring.profiles.default}
+     * (itself defaulting to {@code default}), so that set is consulted the same
+     * way {@code @Profile} resolves it.
      */
     private boolean isDevProfile() {
-        String[] active = environment.getActiveProfiles();
-        if (active.length == 0) {
-            return true;
+        String[] profiles = environment.getActiveProfiles();
+        if (profiles.length == 0) {
+            profiles = environment.getDefaultProfiles();
         }
-        for (String profile : active) {
+        for (String profile : profiles) {
             if ("dev".equalsIgnoreCase(profile) || "test".equalsIgnoreCase(profile)) {
                 return true;
             }
