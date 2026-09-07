@@ -5,7 +5,7 @@
   "terminals": [
     {
       "name": "radiance-api",
-      "command": "export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64; cd Back-End && java -jar target/radiance-1.1.jar",
+      "command": "export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64; export SPRING_PROFILES_ACTIVE=dev; cd Back-End && java -jar target/radiance-1.1.jar",
       "description": "Radiance Spring Boot REST API on http://localhost:8080"
     }
   ],

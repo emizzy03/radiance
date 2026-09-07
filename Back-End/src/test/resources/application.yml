@@ -1,4 +1,8 @@
 spring:
+  # AdminBootstrap only seeds its well-known development admin under an explicit
+  # dev/test profile, so the integration tests must activate one.
+  profiles:
+    active: test
   datasource:
     url: jdbc:h2:mem:radiance-test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
     username: sa

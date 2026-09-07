@@ -40,5 +40,18 @@ Radiance is a full-stack, professional-grade e-commerce platform featuring an ad
 
 *The local API server defaults to mapping requests on `http://localhost:8080`.*
 
+## 🔑 Bootstrapping the Admin Account
+On startup the API seeds a single `ROLE_ADMIN` account if none exists yet, using
+`ADMIN_USERNAME` (default `admin`), `ADMIN_EMAIL` and `ADMIN_PASSWORD`.
+
+- **Deployments**: `ADMIN_PASSWORD` is mandatory. Without it no admin is seeded, so a
+  service that is started without the variable can never be reached with a guessable
+  password. Set it, or create the admin through an already-trusted channel.
+- **Local development**: `mvn spring-boot:run` activates the `dev` profile, which falls
+  back to the well-known password `admin12345` so the admin page works out of the box.
+  That fallback applies **only** when the `dev` or `test` profile is explicitly in effect
+  (via `spring.profiles.active` or `spring.profiles.default`); a plain `java -jar` or
+  container start has no active profile and is always treated as a real deployment.
+
 ---
 *Built with ❤️ to power engaging e-commerce digital storefronts.*
