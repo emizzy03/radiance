@@ -8,6 +8,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import com.example.entity.ErrorResponse;
 
@@ -36,6 +37,12 @@ public class GlobalExceptionHandler {
     public void handleAuthentication(AuthenticationException ex) {
         // Let the security filter chain translate this into a 401.
         throw ex;
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(new ErrorResponse("Uploaded file is too large", null));
     }
 
     @ExceptionHandler(Exception.class)

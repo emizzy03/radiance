@@ -71,6 +71,7 @@ public class SecurityConfig {
                 // Static admin page + shared static assets must be reachable so
                 // the browser can load the page before authenticating API calls.
                 .requestMatchers(HttpMethod.GET, "/", "/index.html", "/admin", "/admin/", "/admin/**",
+                        "/shop", "/shop/", "/shop/**", "/media/**",
                         "/css/**", "/js/**", "/favicon.ico").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // Allow user registration
                 // Role management and admin creation are ADMIN-only (prevents any

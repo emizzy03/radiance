@@ -2,6 +2,8 @@ package com.example.controller;
 
 import java.util.List;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -13,9 +15,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.example.entity.ErrorResponse;
 import com.example.entity.Product;
+import com.example.service.ImageStorageService;
 import com.example.service.ProductService;
 
 /**
@@ -29,6 +35,9 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private ImageStorageService imageStorageService;
 
     //get all products
     @GetMapping
@@ -73,5 +82,42 @@ public class ProductController {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    /**
+     * Uploads a product image (ADMIN only) and returns its public media URL.
+     * The returned {@code url} can be stored in a product's {@code image} field.
+     */
+    @PostMapping("/images")
+    public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
+        try {
+            String url = imageStorageService.store(file);
+            return ResponseEntity.ok(Map.of("url", url));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage(), null));
+        }
+    }
+
+    /**
+     * Uploads an image for a specific product (ADMIN only), stores it, sets the
+     * product's {@code image} to the resulting media URL, and returns the
+     * updated product.
+     */
+    @PostMapping("/{id}/image")
+    public ResponseEntity<?> uploadProductImage(@PathVariable Long id,
+                                                @RequestParam("file") MultipartFile file) {
+        Product product = productService.getProductById(id);
+        if (product == null) {
+            return ResponseEntity.notFound().build();
+        }
+        String url;
+        try {
+            url = imageStorageService.store(file);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage(), null));
+        }
+        product.setImage(url);
+        Product updated = productService.updateProduct(id, product);
+        return ResponseEntity.ok(updated);
     }
 }
