@@ -18,3 +18,10 @@ server:
 app:
   cors:
     allowed-origins: http://localhost:3000
+  uploads:
+    dir: target/test-uploads
+
+# Deterministic admin credentials for tests that boot the full context.
+ADMIN_USERNAME: admin
+ADMIN_EMAIL: admin@radiance.local
+ADMIN_PASSWORD: admin12345

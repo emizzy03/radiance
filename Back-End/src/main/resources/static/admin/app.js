@@ -107,13 +107,60 @@
     $("p-description").value = p.description || "";
     $("p-price").value = p.price != null ? p.price : "";
     $("p-quantity").value = p.quantity != null ? p.quantity : "";
-    $("p-image").value = p.image || "";
+    setImage(p.image || "");
   }
 
   function resetForm() {
     $("formTitle").textContent = "Add product";
     $("productId").value = "";
-    ["p-name", "p-description", "p-price", "p-quantity", "p-image"].forEach((id) => ($(id).value = ""));
+    ["p-name", "p-description", "p-price", "p-quantity"].forEach((id) => ($(id).value = ""));
+    $("p-image-file").value = "";
+    setImage("");
+  }
+
+  // ---- image upload --------------------------------------------------------
+  function setImage(url) {
+    $("p-image").value = url || "";
+    const wrap = $("p-image-preview");
+    if (url) {
+      $("p-image-thumb").src = url;
+      show(wrap);
+    } else {
+      $("p-image-thumb").removeAttribute("src");
+      hide(wrap);
+    }
+  }
+
+  async function uploadImage(file) {
+    const form = new FormData();
+    form.append("file", file);
+    const headers = {};
+    if (authHeader) headers["Authorization"] = authHeader;
+    // Note: do NOT set Content-Type; the browser adds the multipart boundary.
+    const res = await fetch(API + "/api/products/images", {
+      method: "POST",
+      headers: headers,
+      body: form,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || "Upload failed (" + res.status + ")");
+    }
+    const data = await res.json();
+    return data.url;
+  }
+
+  async function onImageSelected(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    flash($("productMsg"), "Uploading image…", true);
+    try {
+      const url = await uploadImage(file);
+      setImage(url);
+      flash($("productMsg"), "Image uploaded.", true);
+    } catch (err) {
+      flash($("productMsg"), err.message, false);
+    }
   }
 
   async function saveProduct() {
@@ -239,6 +286,11 @@
     $("logoutBtn").addEventListener("click", logout);
     $("saveProductBtn").addEventListener("click", saveProduct);
     $("resetFormBtn").addEventListener("click", resetForm);
+    $("p-image-file").addEventListener("change", onImageSelected);
+    $("p-image-clear").addEventListener("click", function () {
+      $("p-image-file").value = "";
+      setImage("");
+    });
     $("refreshProducts").addEventListener("click", loadProducts);
     $("recordPurchaseBtn").addEventListener("click", recordPurchase);
     $("refreshReport").addEventListener("click", loadReport);

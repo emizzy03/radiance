@@ -5,8 +5,9 @@ import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Serves the admin single-page app when the browser requests the {@code /admin}
- * directory (with or without a trailing slash).
+ * Serves the admin and storefront single-page apps when the browser requests
+ * the {@code /admin} or {@code /shop} directory (with or without a trailing
+ * slash).
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -15,5 +16,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/admin").setViewName("redirect:/admin/");
         registry.addViewController("/admin/").setViewName("forward:/admin/index.html");
+        registry.addViewController("/shop").setViewName("redirect:/shop/");
+        registry.addViewController("/shop/").setViewName("forward:/shop/index.html");
     }
 }

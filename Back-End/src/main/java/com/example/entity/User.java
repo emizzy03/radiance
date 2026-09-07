@@ -3,7 +3,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import com.example.validation.OnCreate;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Column;
@@ -21,6 +21,9 @@ import jakarta.validation.constraints.Size;
 @Table(name = "users")
 public class User {
 
+    // READ_ONLY: the id is server-assigned and must never be set from client
+    // input (prevents overwriting arbitrary records on create/update).
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -42,6 +45,13 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    // JsonIgnore: roles are never accepted from nor exposed to clients. They are
+    // assigned only through the dedicated, ADMIN-guarded role-management
+    // endpoints. Accepting them on input would let a self-service registrant
+    // grant themselves ROLE_ADMIN via mass assignment; exposing them on output
+    // is unnecessary data exposure (and would trigger lazy-loading outside a
+    // transaction with open-in-view disabled).
+    @JsonIgnore
     @ManyToMany
     @JoinTable(name = "user_roles",
             joinColumns = @jakarta.persistence.JoinColumn(name = "user_id"),

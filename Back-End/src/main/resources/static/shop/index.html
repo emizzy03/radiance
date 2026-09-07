@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Radiance — Shop</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="/shop/">
+            <span class="logo">R</span>
+            <span>Radiance</span>
+        </a>
+        <div class="top-actions">
+            <input id="search" class="search" type="search" placeholder="Search products…" aria-label="Search products" />
+            <button id="cartBtn" class="cart-btn" aria-label="Open cart">
+                Cart
+                <span id="cartCount" class="cart-count">0</span>
+            </button>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-inner">
+            <h1>Radiance</h1>
+            <p>Curated essentials, delivered with a glow. Browse the collection and check out in seconds — no account required.</p>
+        </div>
+    </section>
+
+    <main class="container">
+        <div class="catalog-head">
+            <h2>Shop the collection</h2>
+            <span id="catalogCount" class="muted"></span>
+        </div>
+        <div id="statusMsg" class="alert hidden"></div>
+        <div id="grid" class="product-grid" aria-live="polite"></div>
+        <div id="emptyState" class="empty hidden">
+            <p>No products found.</p>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>Radiance demo storefront · <a href="/admin/">Admin</a></p>
+    </footer>
+
+    <!-- Product detail modal -->
+    <div id="detailOverlay" class="overlay hidden">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detailName">
+            <button id="detailClose" class="modal-close" aria-label="Close">&times;</button>
+            <div class="detail">
+                <div class="detail-media">
+                    <img id="detailImg" alt="" />
+                </div>
+                <div class="detail-info">
+                    <h2 id="detailName"></h2>
+                    <p id="detailPrice" class="detail-price"></p>
+                    <p id="detailStock" class="detail-stock"></p>
+                    <p id="detailDesc" class="detail-desc muted"></p>
+                    <button id="detailAdd" class="btn btn-primary btn-block">Add to cart</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart drawer -->
+    <div id="cartOverlay" class="overlay hidden">
+        <aside class="drawer" role="dialog" aria-modal="true" aria-label="Shopping cart">
+            <div class="drawer-head">
+                <h2>Your cart</h2>
+                <button id="cartClose" class="modal-close" aria-label="Close cart">&times;</button>
+            </div>
+            <div id="cartItems" class="cart-items"></div>
+            <div id="cartEmpty" class="empty hidden"><p>Your cart is empty.</p></div>
+            <div class="drawer-foot">
+                <div class="cart-total"><span>Total</span><span id="cartTotal">$0.00</span></div>
+                <div id="checkoutMsg" class="alert hidden"></div>
+                <button id="checkoutBtn" class="btn btn-primary btn-block">Checkout</button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Order confirmation -->
+    <div id="confirmOverlay" class="overlay hidden">
+        <div class="modal confirm" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+            <div class="confirm-check">&#10003;</div>
+            <h2 id="confirmTitle">Order confirmed</h2>
+            <p class="muted">Thanks for shopping with Radiance. Here is your order summary:</p>
+            <div id="confirmSummary" class="confirm-summary"></div>
+            <div class="cart-total"><span>Total paid</span><span id="confirmTotal">$0.00</span></div>
+            <button id="confirmClose" class="btn btn-primary btn-block">Continue shopping</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

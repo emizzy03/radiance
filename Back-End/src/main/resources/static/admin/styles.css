@@ -121,4 +121,11 @@ td .btn { margin-right: 6px; }
 .bar .cap { font-size: 11px; color: var(--muted); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70px; }
 .bar .val { font-size: 11px; color: var(--text); }
 
+.image-preview { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.image-preview img {
+    width: 72px; height: 72px; object-fit: cover;
+    border-radius: 10px; border: 1px solid var(--border); background: #10142a;
+}
+input[type="file"] { padding: 9px 12px; cursor: pointer; }
+
 .hidden { display: none !important; }
