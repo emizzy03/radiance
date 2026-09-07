@@ -10,7 +10,6 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -37,6 +36,8 @@ class PurchaseServiceTest {
         Product product = new Product("Lamp", "d", new BigDecimal("12.50"), 10, "l.png");
         product.setId(1L);
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        // Atomic conditional decrement succeeds (1 row updated).
+        when(productRepository.decrementStock(1L, 3)).thenReturn(1);
         when(purchaseRepository.save(any(Purchase.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Purchase purchase = purchaseService.recordPurchase(1L, 3);
@@ -46,10 +47,9 @@ class PurchaseServiceTest {
         assertThat(purchase.getPurchaseDate()).isNotNull();
         assertThat(purchase.getCreatedAt()).isNotNull();
 
-        // stock decremented from 10 to 7
-        ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
-        org.mockito.Mockito.verify(productRepository).save(captor.capture());
-        assertThat(captor.getValue().getQuantity()).isEqualTo(7);
+        // Stock is decremented via the atomic conditional update, not a read-modify-write save.
+        org.mockito.Mockito.verify(productRepository).decrementStock(1L, 3);
+        org.mockito.Mockito.verify(productRepository, org.mockito.Mockito.never()).save(any(Product.class));
     }
 
     @Test
@@ -57,6 +57,8 @@ class PurchaseServiceTest {
         Product product = new Product("Lamp", "d", new BigDecimal("12.50"), 2, "l.png");
         product.setId(1L);
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        // The DB-enforced conditional update matches no row when stock is insufficient.
+        when(productRepository.decrementStock(1L, 5)).thenReturn(0);
 
         assertThatThrownBy(() -> purchaseService.recordPurchase(1L, 5))
                 .isInstanceOf(IllegalArgumentException.class)

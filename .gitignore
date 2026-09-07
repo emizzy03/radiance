@@ -1,6 +1,7 @@
 Back-End/src/main/resources/application.yml
 Back-End/target/classes/application.yml
 Back-End/.env
+Back-End/uploads/
 # Ignore Gradle project-specific cache directory
 .gradle
 

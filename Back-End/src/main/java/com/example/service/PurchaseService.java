@@ -39,17 +39,23 @@ public class PurchaseService {
         }
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + productId));
-        if (product.getQuantity() != null && product.getQuantity() < quantity) {
-            throw new IllegalArgumentException("Insufficient stock for product: " + product.getName());
-        }
 
         Instant now = Instant.now();
         LocalDate today = now.atZone(ZoneOffset.UTC).toLocalDate();
+        // Snapshot the price at purchase time before any bulk update clears the
+        // persistence context.
         Purchase purchase = new Purchase(product, quantity, product.getPrice(), today, now);
 
+        // A null quantity means the product has untracked/unlimited stock, so we
+        // skip the decrement entirely. Otherwise perform an atomic, DB-enforced
+        // conditional decrement: the repository update only succeeds when enough
+        // stock remains, so concurrent checkouts cannot oversell and quantity can
+        // never go negative.
         if (product.getQuantity() != null) {
-            product.setQuantity(product.getQuantity() - quantity);
-            productRepository.save(product);
+            int updated = productRepository.decrementStock(productId, quantity);
+            if (updated == 0) {
+                throw new IllegalArgumentException("Insufficient stock for product: " + product.getName());
+            }
         }
         return purchaseRepository.save(purchase);
     }
