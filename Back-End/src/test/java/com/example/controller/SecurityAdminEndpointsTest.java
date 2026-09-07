@@ -1,8 +1,10 @@
 package com.example.controller;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
@@ -79,10 +81,32 @@ class SecurityAdminEndpointsTest {
                 .andExpect(status().isBadRequest());
     }
 
+    // ---- real HTTP Basic auth against the DB-backed, bootstrapped admin ----
+    // Regression test: authorities come from a lazily-loaded roles collection,
+    // so authentication must run inside a transaction.
+    @Test
+    void bootstrappedAdmin_canAuthenticateWithBasicAndReachAdminEndpoint() throws Exception {
+        mockMvc.perform(get("/api/purchases/daily-report").with(httpBasic("admin", "admin12345")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void basicAuth_wrongPasswordIsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/purchases/daily-report").with(httpBasic("admin", "wrong")))
+                .andExpect(status().isUnauthorized());
+    }
+
     // ---- static admin page ----
     @Test
     void adminStaticAssetsAreServed() throws Exception {
         mockMvc.perform(get("/admin/index.html")).andExpect(status().isOk());
         mockMvc.perform(get("/admin/app.js")).andExpect(status().isOk());
+    }
+
+    @Test
+    void adminDirectoryForwardsToIndex() throws Exception {
+        mockMvc.perform(get("/admin/"))
+                .andExpect(status().isOk())
+                .andExpect(forwardedUrl("/admin/index.html"));
     }
 }

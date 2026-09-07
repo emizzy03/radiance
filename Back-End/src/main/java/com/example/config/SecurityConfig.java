@@ -60,7 +60,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/public/**").permitAll() // Public endpoints
                 // Static admin page + shared static assets must be reachable so
                 // the browser can load the page before authenticating API calls.
-                .requestMatchers(HttpMethod.GET, "/", "/index.html", "/admin", "/admin/**",
+                .requestMatchers(HttpMethod.GET, "/", "/index.html", "/admin", "/admin/", "/admin/**",
                         "/css/**", "/js/**", "/favicon.ico").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // Allow user registration
                 .requestMatchers(HttpMethod.GET, "/api/users/**").authenticated() // Require authentication for GET
