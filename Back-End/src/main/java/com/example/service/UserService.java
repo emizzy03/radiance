@@ -59,8 +59,8 @@ public class UserService {
         }
         // Create new user with admin role
         User adminUser = new User(username, email, passwordEncoder.encode(password));
-        // Ensure ROLE_ADMIN exists, creating it on demand so an admin can be
-        // bootstrapped even on a fresh database.
+        // Ensure the ROLE_ADMIN role exists, creating it on demand so an admin
+        // can always be bootstrapped without pre-seeding the roles table.
         Role adminRole = roleRepository.findByName("ROLE_ADMIN");
         if (adminRole == null) {
             adminRole = roleRepository.save(new Role("ROLE_ADMIN"));
@@ -132,8 +132,13 @@ public class UserService {
         }
         User user = userRepository.findById(id).orElse(null);
         if (user != null) {
-            user.setUsername(userDetails.getUsername());
-            user.setEmail(userDetails.getEmail());
+            // PATCH semantics: only overwrite supplied fields.
+            if (userDetails.getUsername() != null) {
+                user.setUsername(userDetails.getUsername());
+            }
+            if (userDetails.getEmail() != null) {
+                user.setEmail(userDetails.getEmail());
+            }
             return userRepository.save(user);
         }
         return null;

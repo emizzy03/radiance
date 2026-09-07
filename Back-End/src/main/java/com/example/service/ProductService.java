@@ -47,11 +47,23 @@ public class ProductService {
     public Product updateProduct(Long id, Product productDetails) {
         Product product = productRepository.findById(id).orElse(null);
         if (product != null) {
-            product.setName(productDetails.getName());
-            product.setDescription(productDetails.getDescription());
-            product.setPrice(productDetails.getPrice());
-            product.setQuantity(productDetails.getQuantity());
-            product.setImage(productDetails.getImage());
+            // PATCH semantics: only overwrite fields that were actually supplied
+            // so a partial update does not blank out existing values.
+            if (productDetails.getName() != null) {
+                product.setName(productDetails.getName());
+            }
+            if (productDetails.getDescription() != null) {
+                product.setDescription(productDetails.getDescription());
+            }
+            if (productDetails.getPrice() != null) {
+                product.setPrice(productDetails.getPrice());
+            }
+            if (productDetails.getQuantity() != null) {
+                product.setQuantity(productDetails.getQuantity());
+            }
+            if (productDetails.getImage() != null) {
+                product.setImage(productDetails.getImage());
+            }
             return productRepository.save(product);
         }
         return null;

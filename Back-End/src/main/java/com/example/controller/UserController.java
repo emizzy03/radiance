@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.entity.User;
 import com.example.service.UserService;
 import com.example.entity.ErrorResponse;
+import com.example.validation.OnCreate;
 
 /**
  * REST controller for managing User operations.
@@ -69,13 +70,16 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createUser(@Validated @RequestBody User user, BindingResult bindingResult) {
+    public ResponseEntity<?> createUser(@Validated(OnCreate.class) @RequestBody User user, BindingResult bindingResult) {
         try {
             if (bindingResult.hasErrors()) {
                 Map<String, String> errors = bindingResult.getFieldErrors().stream()
                         .collect(Collectors.toMap(
                                 FieldError::getField,
-                                error -> error.getDefaultMessage() != null ? error.getDefaultMessage() : "Invalid value"
+                                error -> error.getDefaultMessage() != null ? error.getDefaultMessage() : "Invalid value",
+                                // A single field can have multiple violations; keep them
+                                // instead of letting toMap throw on the duplicate key.
+                                (first, second) -> first + "; " + second
                         ));
                 return ResponseEntity.badRequest().body(new ErrorResponse("Validation failed", errors));
             }
