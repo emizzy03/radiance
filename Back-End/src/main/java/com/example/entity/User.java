@@ -1,5 +1,8 @@
 package com.example.entity;
 import java.util.Collection;
+import java.util.HashSet;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,6 +26,8 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    // WRITE_ONLY: accepted on input but never serialized back to clients.
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String password;
 
@@ -30,7 +35,7 @@ public class User {
     @JoinTable(name = "user_roles",
             joinColumns = @jakarta.persistence.JoinColumn(name = "user_id"),
             inverseJoinColumns = @jakarta.persistence.JoinColumn(name = "role_id"))
-    private Collection<Role> roles;
+    private Collection<Role> roles = new HashSet<>();
 
     // Getters and Setters for roles
     public Collection<Role> getRoles() {
@@ -76,8 +81,6 @@ public class User {
         this.email = email;
     }
 
-    // Do not expose password directly
-    @com.fasterxml.jackson.annotation.JsonIgnore
     public String getPassword() {
         return password;
     }

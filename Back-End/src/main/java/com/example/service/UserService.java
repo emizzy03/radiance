@@ -54,16 +54,13 @@ public class UserService {
         }
         // Create new user with admin role
         User adminUser = new User(username, email, passwordEncoder.encode(password));
+        // Ensure ROLE_ADMIN exists, creating it on demand so an admin can be
+        // bootstrapped even on a fresh database.
         Role adminRole = roleRepository.findByName("ROLE_ADMIN");
         if (adminRole == null) {
-            // Option 1: Throw an exception
-            throw new IllegalStateException("Admin role does not exist. Please create the ROLE_ADMIN in the database.");
-            // Option 2: Uncomment below to create the role automatically
-            // adminRole = new Role();
-            // adminRole.setName("ROLE_ADMIN");
-            // adminRole = roleRepository.save(adminRole);
+            adminRole = roleRepository.save(new Role("ROLE_ADMIN"));
         }
-        adminUser.setRoles(java.util.Collections.singleton(adminRole));
+        adminUser.setRoles(new java.util.HashSet<>(java.util.Collections.singleton(adminRole)));
         return userRepository.save(adminUser);
     }
     

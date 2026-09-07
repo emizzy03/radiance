@@ -58,6 +58,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/public/**").permitAll() // Public endpoints
+                // Static admin page + shared static assets must be reachable so
+                // the browser can load the page before authenticating API calls.
+                .requestMatchers(HttpMethod.GET, "/", "/index.html", "/admin", "/admin/**",
+                        "/css/**", "/js/**", "/favicon.ico").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll() // Allow user registration
                 .requestMatchers(HttpMethod.GET, "/api/users/**").authenticated() // Require authentication for GET
                 .requestMatchers(HttpMethod.PATCH, "/api/users/**").authenticated() // Require authentication for PATCH
@@ -66,9 +70,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/api/products/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/purchases").permitAll() // Public checkout
+                .requestMatchers(HttpMethod.GET, "/api/purchases/**").hasRole("ADMIN") // Admin reporting
                 .anyRequest().authenticated()
                 )
                 // .oauth2Login(org.springframework.security.config.Customizer.withDefaults())
+                .httpBasic(org.springframework.security.config.Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()));
         return http.build();
