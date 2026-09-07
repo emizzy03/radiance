@@ -4,6 +4,7 @@ import java.util.HashSet;
 
 import com.example.validation.OnCreate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Column;
