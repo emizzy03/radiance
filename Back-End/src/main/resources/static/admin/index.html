@@ -51,7 +51,14 @@
                         <label>Description <input id="p-description" type="text" /></label>
                         <label>Price <input id="p-price" type="number" step="0.01" min="0" /></label>
                         <label>Quantity <input id="p-quantity" type="number" min="0" /></label>
-                        <label>Image URL <input id="p-image" type="text" /></label>
+                        <label>Product image
+                            <input id="p-image-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+                        </label>
+                        <input type="hidden" id="p-image" />
+                        <div id="p-image-preview" class="image-preview hidden">
+                            <img id="p-image-thumb" alt="Selected product image" />
+                            <button type="button" id="p-image-clear" class="btn btn-ghost btn-sm">Remove image</button>
+                        </div>
                         <div class="row">
                             <button id="saveProductBtn" class="btn btn-primary">Save</button>
                             <button id="resetFormBtn" class="btn btn-ghost">Clear</button>

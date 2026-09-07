@@ -9,6 +9,9 @@ import org.springframework.validation.FieldError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -39,7 +42,9 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    // Listing every user is a privileged, data-exposing operation: ADMIN only.
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
         if (users.isEmpty()) {
@@ -48,9 +53,13 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    // Example: Find user by username instead of ID
+    // Look up by username: admins can look up anyone; a normal user may only
+    // look up their own account (prevents account enumeration / IDOR).
     @GetMapping("/username/{username}")
-    public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
+    public ResponseEntity<User> getUserByUsername(@PathVariable String username, Authentication authentication) {
+        if (!isAdmin(authentication) && !username.equals(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         try {
             Optional<User> userOpt = userService.findByUsername(username);
             return userOpt.map(ResponseEntity::ok)
@@ -100,7 +109,11 @@ public class UserController {
     public ResponseEntity<?> updateUser(
             @PathVariable Long id,
             @Validated @RequestBody User user,
-            BindingResult bindingResult) {
+            BindingResult bindingResult,
+            Authentication authentication) {
+        if (!isSelfOrAdmin(id, authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
         }
@@ -119,15 +132,20 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id, Authentication authentication) {
+        if (!isSelfOrAdmin(id, authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         if (userService.deleteUser(id)) {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
     }
 
-    // Additional endpoints for role management
+    // Additional endpoints for role management (ADMIN only — granting roles is a
+    // privileged operation that must never be self-service).
     @PostMapping("/{id}/roles/{roleName}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> assignRoleToUser(@PathVariable Long id, @PathVariable String roleName) {
         try {
             userService.assignRoleToUser(id, roleName);
@@ -139,6 +157,7 @@ public class UserController {
         }
     }
     @DeleteMapping("/{id}/roles/{roleName}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> removeRoleFromUser(@PathVariable Long id, @PathVariable String roleName) {
         try {
             userService.removeRoleFromUser(id, roleName);
@@ -157,6 +176,7 @@ public class UserController {
      * @return ResponseEntity indicating success or failure
      */
     @PostMapping("/admin/{username}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> createAdminUser(@PathVariable String username, @RequestBody Map<String, String> payload) {
         try {
             String email = payload.get("email");
@@ -168,6 +188,33 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    /** True when the authenticated principal holds ROLE_ADMIN. */
+    private boolean isAdmin(Authentication authentication) {
+        if (authentication == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_ADMIN"::equals);
+    }
+
+    /**
+     * Authorizes an action on the user identified by {@code id}: admins may act
+     * on anyone; a normal user may act only on their own account. Prevents IDOR
+     * where any authenticated user could modify/delete arbitrary accounts.
+     */
+    private boolean isSelfOrAdmin(Long id, Authentication authentication) {
+        if (authentication == null) {
+            return false;
+        }
+        if (isAdmin(authentication)) {
+            return true;
+        }
+        User target = userService.getUserById(id);
+        return target != null && target.getUsername() != null
+                && target.getUsername().equals(authentication.getName());
     }
 
 }

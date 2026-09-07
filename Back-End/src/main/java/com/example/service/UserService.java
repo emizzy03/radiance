@@ -41,6 +41,11 @@ public class UserService {
     }
     
     public User createUser(User user) {
+        // Defense in depth against mass assignment: never trust a client-supplied
+        // id or roles on self-service registration. Roles are granted only via the
+        // ADMIN-guarded role-management endpoints.
+        user.setId(null);
+        user.setRoles(new java.util.HashSet<>());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
