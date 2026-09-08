@@ -104,6 +104,23 @@ class ProductImageUploadTest {
     }
 
     @Test
+    void media_pathTraversalFilenameIsRejected() throws Exception {
+        // Traversal segments are rejected by the servlet container and/or the
+        // storage layer; either way the image must not be served (not 2xx).
+        mockMvc.perform(get("/media/{filename}", "../secret.png"))
+                .andExpect(status().is4xxClientError());
+        mockMvc.perform(get("/media/{filename}", ".."))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void uploadForProduct_missingProductIsNotFound() throws Exception {
+        mockMvc.perform(multipart("/api/products/999999/image").file(pngFile())
+                        .with(user("boss").roles("ADMIN")))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void uploadForProduct_setsImageUrlOnProduct() throws Exception {
         // Create a product (ADMIN) with a plain image URL to confirm backward compat.
         String productJson =

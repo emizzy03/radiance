@@ -2,10 +2,14 @@ package com.example.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -78,9 +82,29 @@ class UserServiceTest {
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
         User toCreate = new User("bob", "bob@example.com", "plaintext");
+        toCreate.setId(9999L);
+        Role injectedAdmin = new Role("ROLE_ADMIN");
+        injectedAdmin.setId(1L);
+        toCreate.setRoles(new HashSet<>(List.of(injectedAdmin)));
+
         User created = userService.createUser(toCreate);
 
         assertThat(created.getPassword()).isEqualTo("hashed");
+        // Mass-assignment defense: client-supplied id and roles are discarded.
+        assertThat(created.getId()).isNull();
+        assertThat(created.getRoles()).isEmpty();
+    }
+
+    @Test
+    void updateUser_rejectsPasswordChange() {
+        User patch = new User();
+        patch.setPassword("new-password-please");
+
+        assertThatThrownBy(() -> userService.updateUser(1L, patch))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Password updates are not allowed");
+
+        org.mockito.Mockito.verify(userRepository, never()).save(any(User.class));
     }
 
     @Test

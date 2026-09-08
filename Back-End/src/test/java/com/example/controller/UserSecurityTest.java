@@ -169,4 +169,36 @@ class UserSecurityTest {
         mockMvc.perform(get("/api/users/username/secret").with(user("nosy").roles("USER")))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void getUserByUsername_ownerCanReadSelf() throws Exception {
+        register("myself", "myself@x.com", "password123");
+        mockMvc.perform(get("/api/users/username/myself").with(user("myself").roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("myself"))
+                .andExpect(jsonPath("$.password").doesNotExist());
+    }
+
+    // Blank password hits both @NotBlank and @Size on the same field. The
+    // controller must merge those violations instead of letting Collectors.toMap
+    // throw (which used to surface as HTTP 500).
+    @Test
+    void registration_blankPasswordIsBadRequestNotServerError() throws Exception {
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"blankpw\",\"email\":\"blankpw@x.com\",\"password\":\"\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed"))
+                .andExpect(jsonPath("$.errors.password").exists());
+    }
+
+    @Test
+    void registration_duplicateUsernameIsConflict() throws Exception {
+        register("dupname", "dupname1@x.com", "password123");
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"dupname\",\"email\":\"dupname2@x.com\",\"password\":\"password123\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Username already exists"));
+    }
 }
