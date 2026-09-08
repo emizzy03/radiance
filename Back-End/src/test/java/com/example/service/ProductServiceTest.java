@@ -53,6 +53,22 @@ class ProductServiceTest {
     }
 
     @Test
+    void createProduct_rejectsEmptyName() {
+        Product invalid = new Product("  ", "desc", new BigDecimal("19.99"), 10, "lamp.png");
+        assertThatThrownBy(() -> productService.createProduct(invalid))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("name");
+    }
+
+    @Test
+    void createProduct_rejectsNegativeQuantity() {
+        Product invalid = new Product("Lamp", "desc", new BigDecimal("19.99"), -1, "lamp.png");
+        assertThatThrownBy(() -> productService.createProduct(invalid))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("quantity");
+    }
+
+    @Test
     void createProduct_savesValidProduct() {
         Product valid = new Product("Lamp", "desc", new BigDecimal("19.99"), 10, "lamp.png");
         when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));

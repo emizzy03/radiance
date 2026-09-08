@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -71,5 +72,11 @@ class StorefrontPageTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"productId\":" + id + ",\"quantity\":2}"))
                 .andExpect(status().isCreated());
+
+        // Public catalog must show the decremented stock so the storefront cannot
+        // offer units that checkout already sold.
+        mockMvc.perform(get("/api/products/" + id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.quantity").value(3));
     }
 }
