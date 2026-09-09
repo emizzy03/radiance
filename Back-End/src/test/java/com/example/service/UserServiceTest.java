@@ -2,8 +2,10 @@ package com.example.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -119,5 +121,92 @@ class UserServiceTest {
 
         assertThat(updated.getUsername()).isEqualTo("newuser");
         assertThat(updated.getEmail()).isEqualTo("old@example.com");
+    }
+
+    @Test
+    void createAdminUser_rejectsDuplicateUsername() {
+        when(userRepository.existsByUsername("admin")).thenReturn(true);
+
+        assertThatThrownBy(() -> userService.createAdminUser("admin", "admin@example.com", "secretpass"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Username already exists");
+
+        org.mockito.Mockito.verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void createAdminUser_rejectsDuplicateEmail() {
+        when(userRepository.existsByUsername("admin")).thenReturn(false);
+        when(userRepository.existsByEmail("admin@example.com")).thenReturn(true);
+
+        assertThatThrownBy(() -> userService.createAdminUser("admin", "admin@example.com", "secretpass"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Email already exists");
+
+        org.mockito.Mockito.verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void assignRoleToUser_rejectsUnknownUser() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.assignRoleToUser(99L, "ROLE_ADMIN"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("User not found");
+    }
+
+    @Test
+    void assignRoleToUser_rejectsUnknownRole() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(roleRepository.findByName("ROLE_NOPE")).thenReturn(null);
+
+        assertThatThrownBy(() -> userService.assignRoleToUser(1L, "ROLE_NOPE"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Role not found");
+    }
+
+    @Test
+    void updatePassword_rejectsUnknownUser() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.updatePassword(99L, "oldpass12", "newpass12"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("User not found");
+    }
+
+    @Test
+    void updatePassword_rejectsIncorrectCurrentPassword() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrong-pass", "encoded")).thenReturn(false);
+
+        assertThatThrownBy(() -> userService.updatePassword(1L, "wrong-pass", "newpass12"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Current password is incorrect");
+
+        org.mockito.Mockito.verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void updatePassword_rejectsShortNewPassword() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("oldpass12", "encoded")).thenReturn(true);
+
+        assertThatThrownBy(() -> userService.updatePassword(1L, "oldpass12", "short"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("at least 8");
+
+        org.mockito.Mockito.verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void updatePassword_encodesNewPassword() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("oldpass12", "encoded")).thenReturn(true);
+        when(passwordEncoder.encode("newpass12")).thenReturn("new-hash");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        User updated = userService.updatePassword(1L, "oldpass12", "newpass12");
+
+        assertThat(updated.getPassword()).isEqualTo("new-hash");
     }
 }
