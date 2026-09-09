@@ -169,4 +169,65 @@ class UserSecurityTest {
         mockMvc.perform(get("/api/users/username/secret").with(user("nosy").roles("USER")))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void getUserByUsername_adminCanReadOthersAndHidesPassword() throws Exception {
+        register("lookmeup", "lookmeup@x.com", "password123");
+        mockMvc.perform(get("/api/users/username/lookmeup").with(user("boss").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("lookmeup"))
+                .andExpect(jsonPath("$.password").doesNotExist());
+    }
+
+    @Test
+    void getUserByUsername_unknownIsNotFound() throws Exception {
+        mockMvc.perform(get("/api/users/username/no-such-user").with(user("boss").roles("ADMIN")))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void registration_duplicateEmailIsConflict() throws Exception {
+        register("dupemail1", "shared-inbox@x.com", "password123");
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"dupemail2\",\"email\":\"shared-inbox@x.com\",\"password\":\"password123\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Email already exists"));
+    }
+
+    @Test
+    void updateUser_passwordPatchIsRejected() throws Exception {
+        long id = register("pwpatch", "pwpatch@x.com", "password123");
+        mockMvc.perform(patch("/api/users/" + id).with(user("pwpatch").roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"password\":\"brand-new-password\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void removeRole_nonAdminForbidden() throws Exception {
+        long id = register("keeprole", "keeprole@x.com", "password123");
+        mockMvc.perform(delete("/api/users/" + id + "/roles/ROLE_USER")
+                        .with(user("keeprole").roles("USER")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void createAdmin_adminCanCreateAndNewAdminCanAuthenticate() throws Exception {
+        mockMvc.perform(post("/api/users/admin/secondboss")
+                        .with(httpBasic("admin", "admin12345"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"secondboss@x.com\",\"password\":\"password123\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/purchases/daily-report").with(httpBasic("secondboss", "password123")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void registeredUser_cannotReachAdminReportWithBasicAuth() throws Exception {
+        register("shopper1", "shopper1@x.com", "password123");
+        mockMvc.perform(get("/api/purchases/daily-report").with(httpBasic("shopper1", "password123")))
+                .andExpect(status().isForbidden());
+    }
 }

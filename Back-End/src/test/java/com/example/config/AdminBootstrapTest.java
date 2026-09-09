@@ -1,5 +1,6 @@
 package com.example.config;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -97,5 +98,18 @@ class AdminBootstrapTest {
         adminBootstrap.run();
 
         verify(userService, never()).createAdminUser(anyString(), anyString(), any());
+    }
+
+    @Test
+    void createAdminUserFailure_doesNotAbortStartup() throws Exception {
+        MockEnvironment env = new MockEnvironment();
+        env.setActiveProfiles("dev");
+        setEnvironment(env);
+
+        when(userService.existsByUsername("admin")).thenReturn(false);
+        when(userService.createAdminUser(anyString(), anyString(), anyString()))
+                .thenThrow(new IllegalArgumentException("Username already exists"));
+
+        assertThatCode(() -> adminBootstrap.run()).doesNotThrowAnyException();
     }
 }

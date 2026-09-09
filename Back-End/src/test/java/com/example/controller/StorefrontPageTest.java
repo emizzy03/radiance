@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -71,5 +72,32 @@ class StorefrontPageTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"productId\":" + id + ",\"quantity\":2}"))
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    void publicCheckout_insufficientStockIsBadRequestAndLeavesStockUnchanged() throws Exception {
+        String productJson =
+                "{\"name\":\"Vase\",\"description\":\"d\",\"price\":20.00,\"quantity\":1,\"image\":\"/media/x.png\"}";
+        MvcResult created = mockMvc.perform(post("/api/products").with(user("boss").roles("ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON).content(productJson))
+                .andExpect(status().isOk())
+                .andReturn();
+        long id = objectMapper.readTree(created.getResponse().getContentAsString()).get("id").asLong();
+
+        mockMvc.perform(post("/api/purchases")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productId\":" + id + ",\"quantity\":5}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Insufficient stock")));
+
+        mockMvc.perform(get("/api/products/" + id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.quantity").value(1));
+    }
+
+    @Test
+    void unknownProductIsNotFound() throws Exception {
+        mockMvc.perform(get("/api/products/999999"))
+                .andExpect(status().isNotFound());
     }
 }
